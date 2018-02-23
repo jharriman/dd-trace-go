@@ -8,22 +8,6 @@ import (
 	"github.com/ugorji/go/codec"
 )
 
-func TestEncodercontentType(t *testing.T) {
-	assert := assert.New(t)
-
-	testCases := []struct {
-		encoder     encoder
-		contentType string
-	}{
-		{newJSONEncoder(), "application/json"},
-		{newMsgpackEncoder(), "application/msgpack"},
-	}
-
-	for _, tc := range testCases {
-		assert.Equal(tc.contentType, tc.encoder.contentType())
-	}
-}
-
 func TestJSONEncoding(t *testing.T) {
 	assert := assert.New(t)
 
@@ -39,14 +23,10 @@ func TestJSONEncoding(t *testing.T) {
 
 	for _, tc := range testCases {
 		payload := getTestTrace(tc.traces, tc.size)
-		encoder := newJSONEncoder()
-		err := encoder.encodeTraces(payload)
-		assert.Nil(err)
-
+		r := encodedReader(encodingJSON, payload)
 		// decode to check the right encoding
 		var traces [][]*span
-		dec := json.NewDecoder(encoder.buffer)
-		err = dec.Decode(&traces)
+		err := json.NewDecoder(r).Decode(&traces)
 		assert.Nil(err)
 		assert.Len(traces, tc.traces)
 
@@ -83,15 +63,11 @@ func TestMsgpackEncoding(t *testing.T) {
 
 	for _, tc := range testCases {
 		payload := getTestTrace(tc.traces, tc.size)
-		encoder := newMsgpackEncoder()
-		err := encoder.encodeTraces(payload)
-		assert.Nil(err)
-
+		r := encodedReader(encodingMsgpack, payload)
 		// decode to check the right encoding
 		var traces [][]*span
 		var mh codec.MsgpackHandle
-		dec := codec.NewDecoder(encoder.buffer, &mh)
-		err = dec.Decode(&traces)
+		err := codec.NewDecoder(r, &mh).Decode(&traces)
 		assert.Nil(err)
 		assert.Len(traces, tc.traces)
 
