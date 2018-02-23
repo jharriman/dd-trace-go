@@ -8,7 +8,7 @@ import (
 
 type clientConfig struct {
 	serviceName string
-	transport   *http.Transport
+	transport   http.RoundTripper
 	tracer      *tracer.Tracer // TODO(gbbr): Remove this when we switch.
 }
 
@@ -18,7 +18,7 @@ type ClientOption func(*clientConfig)
 func defaults(cfg *clientConfig) {
 	cfg.tracer = tracer.DefaultTracer
 	cfg.serviceName = "elastic.client"
-	cfg.transport = http.DefaultTransport.(*http.Transport)
+	cfg.transport = http.DefaultTransport
 }
 
 // WithServiceName sets the given service name for the registered driver.
@@ -28,7 +28,7 @@ func WithServiceName(name string) ClientOption {
 	}
 }
 
-func WithTransport(t *http.Transport) ClientOption {
+func WithTransport(t http.RoundTripper) ClientOption {
 	return func(cfg *clientConfig) {
 		cfg.transport = t
 	}
